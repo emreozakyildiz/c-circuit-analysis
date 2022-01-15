@@ -1,132 +1,132 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct direnc{
-	float direncDegeri;
-	struct direnc *sonraki;
+struct resistor{
+	float value;
+	struct resistor *next;
 };
 
-typedef struct direnc direnc;
+typedef struct resistor resistor;
 
-direnc *bas, *yeni;
+resistor *head, *add;
 
-void direncEkle(float veri){
-	if(bas==NULL){
-		yeni=(direnc*)malloc(sizeof(direnc));
-		yeni->direncDegeri = veri;
-		bas = yeni;
+void addResistor(float data){
+	if(head==NULL){
+		add=(resistor*)malloc(sizeof(resistor));
+		add->value = data;
+		head = add;
 	}
 	else{
-		yeni->sonraki=(direnc*)malloc(sizeof(direnc));
-		yeni=yeni->sonraki;
-		yeni->direncDegeri = veri;
+		add->next=(resistor*)malloc(sizeof(resistor));
+		add=add->next;
+		add->value = data;
 	}
-	yeni->sonraki=NULL;
+	add->next=NULL;
 }
 
-int direncSayisiBul(){
+int countResistors(){
 	int counter=0;
-	direnc *p;
-	p=bas;
+	resistor *p;
+	p=head;
 	while(p!=NULL){
 		counter++;
-		p=p->sonraki;
+		p=p->next;
 	}
 	return counter;
 }
 
-float esdegerDirencHesapla(direnc *p,int direncSayisi,float esdegerDirenc,int islemKodu){
+float calculateEquivalentResistor(resistor *p,int countedResistors,float equivalentResistance,int processCode){
 	
-	if(islemKodu==100){
-		p=bas;
-		direncSayisi= direncSayisiBul();
+	if(processCode==100){
+		p=head;
+		countedResistors= countResistors();
 	
-		if(direncSayisi%2==0){
-			esdegerDirenc = p->direncDegeri + p->sonraki->direncDegeri;
+		if(countedResistors%2==0){
+			equivalentResistance = p->value + p->next->value;
 		}
-		else if(direncSayisi==1){
-			return p->direncDegeri;
+		else if(countedResistors==1){
+			return p->value;
 		}
-		else if(direncSayisi%2==1){
-			esdegerDirenc = (p->direncDegeri * p->sonraki->direncDegeri)/(p->direncDegeri + p->sonraki->direncDegeri);
+		else if(countedResistors%2==1){
+			equivalentResistance = (p->value * p->next->value)/(p->value + p->next->value);
 		}
-		direncSayisi -=1;
-		p=p->sonraki->sonraki;
-		esdegerDirencHesapla(p,direncSayisi,esdegerDirenc,101);
+		countedResistors -=1;
+		p=p->next->next;
+		calculateEquivalentResistor(p,countedResistors,equivalentResistance,101);
 	}
-	else if(islemKodu==101){
+	else if(processCode==101){
 		if(p==NULL){
-			return esdegerDirenc;
+			return equivalentResistance;
 		}
 		else{
-			if(direncSayisi%2==0){
-				esdegerDirenc +=p->direncDegeri;
+			if(countedResistors%2==0){
+				equivalentResistance +=p->value;
 			}
 			else{
-				esdegerDirenc = (esdegerDirenc * p->direncDegeri)/(esdegerDirenc + p->direncDegeri);
+				equivalentResistance = (equivalentResistance * p->value)/(equivalentResistance + p->value);
 			}
-			direncSayisi -=1;
-			p=p->sonraki;			
-			esdegerDirencHesapla(p,direncSayisi,esdegerDirenc,101);
+			countedResistors -=1;
+			p=p->next;			
+			calculateEquivalentResistor(p,countedResistors,equivalentResistance,101);
 		}
 	}
 }
 
-void direnclerUzerineDusenGerilim(direnc *p, float akim, int islemKodu){
-	float simdikiDirenc,simdikiEsdeger,simdikiAkim;
+void voltageAcrossResistor(resistor *p, float current, int processCode){
+	float nowResistor,nowEquivalentResistance,nowCurrent;
 
-	if(p->sonraki == NULL){
-		printf("%.2f R uzerine dusen gerilim = %.2f V\n",p->direncDegeri,p->direncDegeri*akim);
+	if(p->next == NULL){
+		printf("%.2f R uzerine dusen gerilim = %.2f V\n",p->value,p->value*current);
 		return;
 	}
 
-	if(islemKodu==100){
-		direnc *q=bas;
-		p=p->sonraki;
-		while(p->sonraki !=NULL){
-			p=p->sonraki;
-			q=q->sonraki;
+	if(processCode==100){
+		resistor *q=head;
+		p=p->next;
+		while(p->next !=NULL){
+			p=p->next;
+			q=q->next;
 		}
-		simdikiDirenc = p->direncDegeri;
+		nowResistor = p->value;
 		free(p);
-		q->sonraki=NULL;
-		printf("%.2f R uzerine dusen gerilim = %.2f V\n",simdikiDirenc,simdikiDirenc*akim);
-		direnclerUzerineDusenGerilim(bas,akim,101);
+		q->next=NULL;
+		printf("%.2f R uzerine dusen gerilim = %.2f V\n",nowResistor,nowResistor*current);
+		voltageAcrossResistor(head,current,101);
 	}
-	else if(islemKodu==101){
-		direnc *q=bas;
-		p=p->sonraki;
-		while(p->sonraki !=NULL){
-			p=p->sonraki;
-			q=q->sonraki;
+	else if(processCode==101){
+		resistor *q=head;
+		p=p->next;
+		while(p->next !=NULL){
+			p=p->next;
+			q=q->next;
 		}
-		simdikiDirenc = p->direncDegeri;
+		nowResistor = p->value;
 		free(p);
-		q->sonraki =NULL;
-		simdikiEsdeger=esdegerDirencHesapla(bas,0,0,100);
-		simdikiAkim= akim* (simdikiEsdeger / (simdikiEsdeger + simdikiDirenc));
-		printf("%.2f R uzerine dusen gerilim = %.2f V\n",simdikiDirenc,simdikiDirenc*simdikiAkim);
-		direnclerUzerineDusenGerilim(bas,akim-simdikiAkim,100);
+		q->next =NULL;
+		nowEquivalentResistance=calculateEquivalentResistor(head,0,0,100);
+		nowCurrent= current* (nowEquivalentResistance / (nowEquivalentResistance + nowResistor));
+		printf("%.2f R uzerine dusen gerilim = %.2f V\n",nowResistor,nowResistor*nowCurrent);
+		voltageAcrossResistor(head,current-nowCurrent,100);
 	}
 }
 
 int main(){
-	float veri;
-	float rEs,gerilim,anakolAkimi;
+	float data;
+	float equivalentResistance,voltage,mainFlow;
 
 	printf("Gerilimi girin:");
-	scanf("%f",&gerilim);
+	scanf("%f",&voltage);
 
 	int counter=0;
 	printf("İlk direnci girin:");
-	scanf("%f",&veri);
-	while(veri !=0){
-		direncEkle(veri);
-		printf("%.2f, basariyla eklendi. Sonraki direnci girin:",veri);
-		scanf("%f",&veri);
+	scanf("%f",&data);
+	while(data !=0){
+		addResistor(data);
+		printf("%.2f, basariyla eklendi. Sonraki direnci girin:",data);
+		scanf("%f",&data);
 	}
-	rEs=esdegerDirencHesapla(bas,0,0,100);
-	anakolAkimi = gerilim / rEs;
-	printf("Esdeger Direnc= %.2f R\nAnakol Akimi = %.2f Amper\n",rEs, anakolAkimi);
-	direnclerUzerineDusenGerilim(bas,anakolAkimi,100);
+	equivalentResistance=calculateEquivalentResistor(head,0,0,100);
+	mainFlow = voltage / equivalentResistance;
+	printf("Esdeger Direnc= %.2f R\nAnakol Akimi = %.2f Amper\n",equivalentResistance, mainFlow);
+	voltageAcrossResistor(head,mainFlow,100);
 }
