@@ -1,27 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct resistor{
+typedef struct resistor{
 	float value;
 	struct resistor *next;
-};
+} resistor;
 
-typedef struct resistor resistor;
+resistor* head = NULL;
+resistor *add = NULL;
 
-resistor *head, *add;
-
-void addResistor(float data){
-	if(head==NULL){
-		add=(resistor*)malloc(sizeof(resistor));
-		add->value = data;
-		head = add;
+void addResistor(float data) {
+	resistor* temp;
+	temp = (resistor*)malloc(sizeof(resistor));
+	if (temp == NULL) {
+		fprintf(stderr, "Hafiza dolu!\n");
+		return;
 	}
-	else{
-		add->next=(resistor*)malloc(sizeof(resistor));
-		add=add->next;
-		add->value = data;
+	temp->value = data;
+	temp->next = NULL;
+
+	if (head == NULL) {
+		head = temp;
+		add = head;
 	}
-	add->next=NULL;
+	else {
+		add->next = temp;
+		add = add->next;
+	}
 }
 
 int countResistors(){
